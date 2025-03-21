@@ -9,8 +9,12 @@ page = st.sidebar.radio("", ["LLM Chat", "PDF Upload & Query"])
 
 st.title("PDF Chat Assistant")
 with st.expander("About the App"):
-    st.write("This application allows you to perform RAG (Retrieval-Augmented Generation) on PDF documents.")
-    st.write("You can upload PDFs and ask questions related to their content.")
+    st.write("This application is a modular assistant combining two main features:")
+    st.markdown("""
+    - **LLM Chat:** Chat with a general-purpose Large Language Model (LLM) without document context.
+    - **PDF Upload & Query:** Upload PDF documents and perform RAG (Retrieval-Augmented Generation) to ask context-based questions directly from your files.
+    """)
+    st.write("You can either have open-ended conversations with the LLM or query your own uploaded documents in a single unified interface.")
 
 if page == "LLM Chat":
     st.header("💬 LLM Chat")
