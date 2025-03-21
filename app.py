@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import logging
-import os
+import tempfile
+
 from src.pdf_reader import PDFReader
 from src.documents import TokenTextSplitter
 from src.vector_store import SimpleVectorStore
@@ -17,12 +18,8 @@ ollama_client = OllamaClient()
 vector_store = SimpleVectorStore(ollama_client)
 chat_service = ChatService(ollama_client, vector_store)
 
-def init_pdf_document(pdf_path):
+def process_pdf_and_add_to_vectorstore(pdf_path):
     """PDF dosyasını okur ve vector store'a ekler"""
-    if not os.path.exists(pdf_path):
-        logger.error(f"PDF dosyası bulunamadı: {pdf_path}")
-        return
-
     pdf_reader = PDFReader(pdf_path)
     documents = pdf_reader.get()
 
@@ -44,8 +41,25 @@ def search():
     response = chat_service.search_in_context(prompt)
     return jsonify({"response": response})
 
+@app.route('/upload', methods=['POST'])
+def upload_pdf():
+    if 'file' not in request.files:
+        return jsonify({"error": "PDF dosyası gönderilmedi"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Dosya seçilmedi"}), 400
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+        file.save(temp_file.name)
+        logger.info(f"Yüklenen PDF geçici olarak kaydedildi: {temp_file.name}")
+
+        process_pdf_and_add_to_vectorstore(temp_file.name)
+
+    return jsonify({"message": "PDF başarıyla işlendi ve vektör deposuna eklendi."}), 200
 
 if __name__ == '__main__':
-    init_pdf_document(PDF_PATH)
+    # Başlangıçta default PDF'i yükle
+    process_pdf_and_add_to_vectorstore(PDF_PATH)
 
     app.run(host='0.0.0.0', port=5050, debug=True)
