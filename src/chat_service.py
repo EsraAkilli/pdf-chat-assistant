@@ -1,9 +1,8 @@
 import logging
-from .ollama_client import OllamaClient
-from .vector_store import SimpleVectorStore
+from src.ollama_client import OllamaClient
+from src.vector_store import SimpleVectorStore
 
 logger = logging.getLogger(__name__)
-
 
 class ChatService:
     """Sohbet işlevselliğini sağlayan servis"""
@@ -16,17 +15,11 @@ class ChatService:
     def generate_message(self, prompt: str) -> str:
         """Genel bir soruya cevap üretir"""
         logger.info(f"Generating general response for prompt: {prompt[:50]}...")
-        system_prompt = "Sen yardımcı bir asistansın."
-        full_prompt = f"{system_prompt}\n\nKullanıcı: {prompt}\n\nAsistan:"
+        system_prompt = "You are a helpful assistant. Provide clear, concise answers strictly based on the user's input. Do not add additional roles, characters, or simulate dialogues."
+        full_prompt = f"{system_prompt}\n\nUser: {prompt}\n\nAssistant:"
         response = self.client.generate(full_prompt)
         logger.info(f"Generated response of length {len(response)}")
         return response
-
-    def generate_joke(self, topic: str) -> str:
-        """Belirli bir konuda şaka üretir"""
-        logger.info(f"Generating joke about topic: {topic}")
-        prompt = f"Lütfen {topic} konusunda komik bir şaka yap."
-        return self.generate_message(prompt)
 
     def search_in_context(self, query: str) -> str:
         """Doküman bağlamında sorguya cevap verir"""
@@ -35,20 +28,17 @@ class ChatService:
 
         if not similar_documents:
             logger.warning("No similar documents found for the query")
-            return "Üzgünüm, bu soruya cevap verebilecek bilgi bulamadım."
+            return "Sorry, I couldn't find relevant information in the provided documents."
 
-        # Bulunan doküman içeriklerini birleştirme
         information = "\n\n".join([doc.content for doc in similar_documents])
 
-        system_prompt = f"""Sen yardımcı bir asistansın.
-Sadece aşağıdaki bilgileri kullanarak soruya cevap ver.
-Başka bilgi kullanma. Eğer bilmiyorsan, basitçe "Bilinmiyor" diye cevap ver.
+        system_prompt = (
+            "You are a helpful assistant strictly using ONLY the following document context to answer the user. "
+            "Do not invent additional details. If you don't know the answer based on the given information, reply with 'Unknown'.\n\n"
+            f"Context:\n{information}"
+        )
 
-Bilgi:
-{information}
-"""
-
-        full_prompt = f"{system_prompt}\n\nKullanıcı: {query}\n\nAsistan:"
+        full_prompt = f"{system_prompt}\n\nUser question: {query}\n\nAssistant response:"
         response = self.client.generate(full_prompt)
         logger.info(f"Generated context-based response of length {len(response)}")
         return response

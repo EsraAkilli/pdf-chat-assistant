@@ -7,7 +7,6 @@ from src.documents import TokenTextSplitter
 from src.vector_store import SimpleVectorStore
 from src.ollama_client import OllamaClient
 from src.chat_service import ChatService
-from config import PDF_PATH
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -59,7 +58,5 @@ def upload_pdf():
     return jsonify({"message": "PDF başarıyla işlendi ve vektör deposuna eklendi."}), 200
 
 if __name__ == '__main__':
-    # Başlangıçta default PDF'i yükle
-    process_pdf_and_add_to_vectorstore(PDF_PATH)
 
     app.run(host='0.0.0.0', port=5050, debug=True)

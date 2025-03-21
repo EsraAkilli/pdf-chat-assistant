@@ -2,8 +2,8 @@ import numpy as np
 from typing import List
 import logging
 from sklearn.metrics.pairwise import cosine_similarity
-from .documents import Document
-from .ollama_client import OllamaClient
+from src.documents import Document
+from src.ollama_client import OllamaClient
 from config import TOP_K_RESULTS
 
 logger = logging.getLogger(__name__)
